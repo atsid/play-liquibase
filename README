@@ -1,5 +1,5 @@
 I prefer Liquibase DB evolutions to play 2.0 Evolutions mechanism
-This is simple play 2.1 plugin for liquibase usage with Scala 2.10.x.
+This is simple play 2.2.x plugin for liquibase usage with Scala 2.10.x.
 
 Suppose main script files for all DBs used are at conf/liquibase/--dbName--/modules.xml
 
@@ -10,6 +10,6 @@ Use contexts in your scripts to manage test and prod data and schema. Available 
 
 In dev and production mode use applyLiquibase.<dbName>=true properties to apply scripts.
 
-Simply publish-local with sbt and add dependency to your play 2.1 project "play" % "play-liquibase_2.10" % "1.0" and add the following to your settings:
+Simply publish-local with sbt and add dependency to your play 2.2.x project "play" % "play-liquibase_2.10" % "1.0" and add the following to your settings:
 resolvers += Resolver.file("Local repo", Path.userHome / ".ivy2/local")(Resolver.ivyStylePatterns)
 
