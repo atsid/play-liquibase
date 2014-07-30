@@ -8,4 +8,4 @@ resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/release
 
 libraryDependencies ++= Seq(javaJdbc)
 
-libraryDependencies += "org.liquibase" % "liquibase-core" % "3.1.1"
+libraryDependencies += "org.liquibase" % "liquibase-core" % "3.2.2"
