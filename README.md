@@ -1,4 +1,4 @@
-This is simple play 2.2.x plugin for liquibase usage with Scala 2.10.x. and liquibase 3.2.2
+This is a simple play 2.2.x plugin for liquibase usage with Scala 2.10.x. and liquibase 3.2.2
 
 Liquibase script files should at conf/liquibase/{dbName}/changelog.xml
 
