@@ -34,9 +34,11 @@ class LiquibasePlugin(app: Application) extends Plugin {
       case (ds, dbName) => {
         val fileOpener = new FileSystemResourceAccessor(app.path.getAbsolutePath)
         DB.withConnection(dbName)(connection => {
-          val defaultChangeLogPath = "conf/liquibase/" + dbName + "/changelog.xml"
-          val changeLogPath = app.configuration.getString("applyLiquibase.changelogPath." + dbName).orElse(Some(defaultChangeLogPath)).get
           val applyUpdatesKey = "applyLiquibase." + dbName + ".apply"
+          val changelogPathKey = "applyLiquibase." + dbName + ".changelogPath"
+          val defaultChangeLogPath = "conf/liquibase/" + dbName + "/changelog.xml"
+          val changeLogPath = app.configuration.getString(changelogPathKey).orElse(Some(defaultChangeLogPath)).get
+
 
           val liqui = new Liquibase(changeLogPath, fileOpener, new JdbcConnection(connection))
           app.mode match {
