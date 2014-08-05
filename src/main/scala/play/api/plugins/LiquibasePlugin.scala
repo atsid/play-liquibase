@@ -34,18 +34,22 @@ class LiquibasePlugin(app: Application) extends Plugin {
       case (ds, dbName) => {
         val fileOpener = new FileSystemResourceAccessor(app.path.getAbsolutePath)
         DB.withConnection(dbName)(connection => {
-          val liqui = new Liquibase("conf/liquibase/" + dbName + "/changelog.xml", fileOpener, new JdbcConnection(connection))
+          val defaultChangeLogPath = "conf/liquibase/" + dbName + "/changelog.xml"
+          val changeLogPath = app.configuration.getString("applyLiquibase.changeLogPath." + dbName).orElse(Some(defaultChangeLogPath)).get
+          val applyUpdatesKey = "applyLiquibase." + dbName + ".apply"
+
+          val liqui = new Liquibase(changeLogPath, fileOpener, new JdbcConnection(connection))
           app.mode match {
             case Mode.Test => liqui.update(TestContext)
-            case Mode.Dev if app.configuration.getBoolean("applyLiquibase." + dbName).filter(_ == true).isDefined => liqui.update(DeveloperContext)
-            case Mode.Prod if app.configuration.getBoolean("applyLiquibase." + dbName).filter(_ == true).isDefined => liqui.update(ProductionContext)
+            case Mode.Dev if app.configuration.getBoolean(applyUpdatesKey).filter(_ == true).isDefined => liqui.update(DeveloperContext)
+            case Mode.Prod if app.configuration.getBoolean(applyUpdatesKey).filter(_ == true).isDefined => liqui.update(ProductionContext)
             case Mode.Prod => {
               Logger("play").warn("Your production database [" + dbName + "] needs Liquibase updates! \n\n" + getScriptDescriptions(liqui.listUnrunChangeSets(ProductionContext)))
               Logger("play").warn("Run with -DapplyLiquibase." + dbName + "=true if you want to run them automatically (be careful)")
 
-              throw new PlayException("Liquibase script should be applyed, set applyLiquibase."+dbName+"=true in application.conf", getScriptDescriptions(liqui.listUnrunChangeSets(ProductionContext)))
+              throw new PlayException("Liquibase script should be applied, set " + applyUpdatesKey + "=true in application.conf", getScriptDescriptions(liqui.listUnrunChangeSets(ProductionContext)))
             }
-            case _ => new PlayException("Liquibase script should be applyed, set applyLiquibase."+dbName+"=true in application.conf", getScriptDescriptions(liqui.listUnrunChangeSets(ProductionContext)))
+            case _ => new PlayException("Liquibase script should be applied, set " + applyUpdatesKey + "=true in application.conf", getScriptDescriptions(liqui.listUnrunChangeSets(ProductionContext)))
           }
         })(app)
       }
