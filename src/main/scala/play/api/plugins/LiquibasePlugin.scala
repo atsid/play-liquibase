@@ -4,7 +4,7 @@ import liquibase.Liquibase
 import scala.collection.JavaConversions._
 import liquibase.changelog.ChangeSet
 import liquibase.database.jvm.JdbcConnection
-import liquibase.resource.FileSystemResourceAccessor
+import liquibase.resource.{ResourceAccessor, CompositeResourceAccessor, ClassLoaderResourceAccessor, FileSystemResourceAccessor}
 import play.api._
 import play.api.db.{DB, DBPlugin}
 
@@ -27,20 +27,28 @@ class LiquibasePlugin(app: Application) extends Plugin {
     }.mkString("\n")
   }
 
+  private def resourceAccessor = {
+    val fileOpener = new FileSystemResourceAccessor(app.path.getAbsolutePath)
+    val classLoader = new ClassLoaderResourceAccessor()
+    new CompositeResourceAccessor(
+      fileOpener,
+      classLoader
+    );
+  }
+
   override def onStart() {
     val api = app.plugin[DBPlugin].map(_.api).getOrElse(throw new Exception("there should be a database plugin registered at this point but looks like it's not available, so liquibase won't work. Please make sure you register a db plugin properly"))
 
     api.datasources.foreach {
       case (ds, dbName) => {
-        val fileOpener = new FileSystemResourceAccessor(app.path.getAbsolutePath)
+
         DB.withConnection(dbName)(connection => {
           val applyUpdatesKey = "applyLiquibase." + dbName + ".apply"
           val changelogPathKey = "applyLiquibase." + dbName + ".changelogPath"
           val defaultChangeLogPath = "conf/liquibase/" + dbName + "/changelog.xml"
           val changeLogPath = app.configuration.getString(changelogPathKey).orElse(Some(defaultChangeLogPath)).get
 
-
-          val liqui = new Liquibase(changeLogPath, fileOpener, new JdbcConnection(connection))
+          val liqui = new Liquibase(changeLogPath, resourceAccessor, new JdbcConnection(connection))
           app.mode match {
             case Mode.Test => liqui.update(TestContext)
             case Mode.Dev if app.configuration.getBoolean(applyUpdatesKey).filter(_ == true).isDefined => liqui.update(DeveloperContext)
