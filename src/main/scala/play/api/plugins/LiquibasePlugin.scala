@@ -48,6 +48,7 @@ class LiquibasePlugin(app: Application) extends Plugin {
           val defaultChangeLogPath = "conf/liquibase/" + dbName + "/changelog.xml"
           val changeLogPath = app.configuration.getString(changelogPathKey).orElse(Some(defaultChangeLogPath)).get
 
+          Logger("play").info("Liquibase detects app-mode [" + app.mode + "]");
           val liqui = new Liquibase(changeLogPath, resourceAccessor, new JdbcConnection(connection))
           app.mode match {
             case Mode.Test => liqui.update(TestContext)
