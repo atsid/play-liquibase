@@ -36,9 +36,12 @@ class LiquibasePlugin(app: Application) extends Plugin {
     val liqui = makeLiquibase(dbName, connection)
 
     if (isUpdateEnabled(dbName)) {
+      Logger("play").info(s"Applying liquibase to $dbName, Context: ($context)")
       liqui.update(context)
     } else if (ProductionContext.equals(context)) {
       emitUpdateRequiredError(dbName, liqui.listUnrunChangeSets(ProductionContext))
+    } else {
+      Logger("play").info(s"Skipping liquibase on $dbName, Context: ($context)")
     }
   }
 
@@ -49,9 +52,9 @@ class LiquibasePlugin(app: Application) extends Plugin {
   def emitUpdateRequiredError(dbName: String,  unrunChangesets: java.util.List[ChangeSet]) {
     val configKey = applyUpdatesKey(dbName)
     val unrunDescription = getScriptDescriptions(unrunChangesets)
-    Logger("play").warn("Your production database [" + dbName + "] needs Liquibase updates! \n\n" + unrunDescription)
-    Logger("play").warn("Run with -DapplyLiquibase." + dbName + "=true if you want to run them automatically (be careful)")
-    throw new PlayException("Liquibase script should be applied, set " + configKey + "=true in application.conf", unrunDescription)
+    Logger("play").warn(s"Your production database [$dbName] needs Liquibase updates! \n\n" + unrunDescription)
+    Logger("play").warn(s"Run with -D$configKey=true if you want to run them automatically (be careful)")
+    throw new PlayException(s"Liquibase script should be applied, set $configKey=true in application.conf", unrunDescription)
   }
 
   private def changeLogPath (dbName:String): String = {
@@ -89,19 +92,19 @@ class LiquibasePlugin(app: Application) extends Plugin {
   }
 
   def defaultChangelogPath(dbName: String): String = {
-    "conf/liquibase/" + dbName + "/changelog.xml"
+    s"conf/liquibase/$dbName/changelog.xml"
   }
 
   def changelogPathKey(dbName: String): String = {
-    "applyLiquibase." + dbName + ".changelogPath"
+    s"applyLiquibase.$dbName.changelogPath"
   }
 
   def contextNameKey(dbName: String): String = {
-    "applyLiquibase." + dbName + ".context"
+    s"applyLiquibase.$dbName.context"
   }
 
   private def applyUpdatesKey (dbName: String): String = {
-    "applyLiquibase." + dbName + ".apply"
+    s"applyLiquibase.$dbName.apply"
   }
 
   private def getScriptDescriptions(changeSets: Seq[ChangeSet]): String = {
