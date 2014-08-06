@@ -47,11 +47,11 @@ class LiquibasePlugin(app: Application) extends Plugin {
   }
 
   def emitUpdateRequiredError(dbName: String,  unrunChangesets: java.util.List[ChangeSet]) {
-    val applyUpdatesKey = applyUpdatesKey(dbName)
+    val configKey = applyUpdatesKey(dbName)
     val unrunDescription = getScriptDescriptions(unrunChangesets)
     Logger("play").warn("Your production database [" + dbName + "] needs Liquibase updates! \n\n" + unrunDescription)
     Logger("play").warn("Run with -DapplyLiquibase." + dbName + "=true if you want to run them automatically (be careful)")
-    throw new PlayException("Liquibase script should be applied, set " + applyUpdatesKey + "=true in application.conf", unrunDescription)
+    throw new PlayException("Liquibase script should be applied, set " + configKey + "=true in application.conf", unrunDescription)
   }
 
   private def changeLogPath (dbName:String): String = {
